@@ -1,0 +1,13 @@
+.left-group {
+    display: inline;
+    align-items: center;
+}
+
+.right-group{
+    display: inline;
+    margin-left: 90%;
+}
+
+.student-attendance {
+    margin-bottom: 15px;
+}
