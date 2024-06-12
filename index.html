@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Attendance</title>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"></script>
     <script defer src="index.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,7 +13,7 @@
 <body>
     <form id="dateForm">
         <label for="date">Select a Date:</label>
-        <input type="date" id="date">
+        <input type="date" id="date" name="date">
         <button type="submit">Search</button>
     </form>
 
@@ -123,10 +124,12 @@
                     <input type="radio" name="attendance_venkat" value="absent"> Absent
                 </label>
             </div>
-
+            
             <input type="submit" value="Mark Attendance">
         </form>
     </div>
+
+    
     <div id="display">
         <ul id ="unordered"></ul>
     </div>

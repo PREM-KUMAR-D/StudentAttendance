@@ -1,6 +1,6 @@
 const formDate = document.getElementById('dateForm');
 const divDefault = document.getElementById('default');
-const dateSet = new Set(JSON.parse(localStorage.getItem('dateSet')) || []);
+const attendanceForm = document.getElementById('attendanceForm');
 const fetchReport = document.getElementById('fetchReportButton');
 const divDisplay = document.getElementById('display');
 
@@ -8,36 +8,44 @@ const divDisplay = document.getElementById('display');
 
 formDate.addEventListener('submit', dateForm);
 fetchReport.addEventListener('click', displayReport);
+attendanceForm.addEventListener('submit', saveAttendance);
 
+var d;
 
-var date;
-var countJson = {};
 
 
 function dateForm(event) {
     event.preventDefault();
 
+
     divDisplay.style.display = 'none';
     divDefault.style.display = 'block';
     const dateInput = event.target.date.value;
-    date = dateInput;
-    const d = new Date(dateInput);
-    const unixDate = Math.floor(d.getTime() / 1000);
+    d = dateInput;
 
-    if (!dateSet.has(unixDate)) {
-        dateSet.add(unixDate);
-        localStorage.setItem('dateSet', JSON.stringify(Array.from(dateSet)));
-
-    } else {
-        display(dateInput);
+    if (d === null) {
+        alert('Please select a date For Attendance !');
+        return;
     }
+
+    axios.get(`http://localhost:4000/attendance/get-attendance?date=${dateInput}`)
+        .then(result => {
+            let obj = result.data.data;
+            if (obj !== null) {
+                display(dateInput);
+            }
+
+
+        })
+        .catch(err => console.log(err));
 }
 
-const attendanceForm = document.getElementById('attendanceForm');
-attendanceForm.addEventListener('submit', saveAttendance);
 
-function saveAttendance() {
-    if (date === undefined) {
+
+function saveAttendance(event) {
+    event.preventDefault();
+
+    if (d === undefined) {
         alert('Please select date Before Marking attendance');
         return;
     }
@@ -47,6 +55,8 @@ function saveAttendance() {
         attendance[name] = value;
     }
 
+
+    let countJson = {};
     for (key in attendance) {
         let name = key.split('_')[1];
         if (attendance[key] === 'present') {
@@ -56,51 +66,95 @@ function saveAttendance() {
             countJson[name] = 0;
         }
     }
-    
-    localStorage.setItem(`attendance_${date}`, JSON.stringify(attendance));
-    alert('Attendance saved!');
+    // localStorage.setItem(`attendance_${date}`, JSON.stringify(attendance));
+
+    let jsonString = JSON.stringify(countJson);
+    axios.post('http://localhost:4000/attendance/add-attendance', {
+        date: d,
+        data: jsonString
+    })
+        .then(() => alert('Attendance saved!'))
+        .catch(err => console.log(err));
+
+
+
+
 }
 
-function display() {
+function display(dateInput) {
 
 
-    const storedAttendance = JSON.parse(localStorage.getItem(`attendance_${date}`));
-    if (storedAttendance) {
-        for (const name in storedAttendance) {
-            const radioButtons = document.getElementsByName(name);
-            for (const radioButton of radioButtons) {
-                if (radioButton.value === storedAttendance[name]) {
-                    radioButton.checked = true;
+    let storedAttendance;
+    axios.get(`http://localhost:4000/attendance/get-attendance?date=${dateInput}`)
+        .then(result => {
+            storedAttendance = result.data.data;
+
+            if (storedAttendance) {
+                storedAttendance = JSON.parse(storedAttendance);
+
+                for (const name in storedAttendance) {
+                    const attendanceStatus = storedAttendance[name];
+                    const presentRadio = document.querySelector(`input[name="attendance_${name}"][value="present"]`);
+                    const absentRadio = document.querySelector(`input[name="attendance_${name}"][value="absent"]`);
+
+                    if (attendanceStatus === 1) {
+                        presentRadio.checked = true;
+                    } else {
+                        absentRadio.checked = true;
+                    }
                 }
+
+                alert('Attendance data loaded!');
             }
-        }
-        alert('Attendance data loaded!');
-    }
+
+        })
+
 }
 
 function displayReport() {
 
     divDefault.style.display = 'none';
     divDisplay.style.display = 'block';
-    
-    
-  
-    renderJson(countJson);
+
+    axios.get(`http://localhost:4000/attendance/get-latest`)
+        .then(result => {
+            let countJson = result.data;
+            renderJson(countJson);
+        })
+        .catch(err => console.log(err));
+
+
 }
 
 function renderJson(countJson) {
 
-    const ulElem = document.getElementById('unordered');
-    const total = dateSet.size;
+    axios.get(`http://localhost:4000/attendance/get-records-length`)
+        .then(obj => {
+            let len = obj.data.length;
+            if (len === 0) {
+                return;
+            }
 
-    for (key in countJson) {
+            const ulElem = document.getElementById('unordered');
 
-        const listItem = document.createElement('li');
-        const itemText = document.createElement('p');
-        const percent = Math.floor(countJson[key] /total) * 100 ;
-        itemText.textContent = `${key}: ${percent} % `;
-        listItem.appendChild(itemText);
-        ulElem.appendChild(listItem);
-    }
+            for (key in countJson) {
+
+                const listItem = document.createElement('li');
+                const itemText = document.createElement('p');
+                const percent = countJson[key] / len * 100;
+                itemText.textContent = `${key}: ${percent} % `;
+                listItem.appendChild(itemText);
+                ulElem.appendChild(listItem);
+            }
+            // axios.get(`http://localhost:4000/attendance/get-records-length`)
+            //     .then(result => {
+            //     })
+
+
+
+
+        })
+        .catch(err => console.log(err));
+
     console.log(countJson);
 }
