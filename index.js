@@ -1,11 +1,18 @@
 const formDate = document.getElementById('dateForm');
 const divDefault = document.getElementById('default');
 const dateSet = new Set(JSON.parse(localStorage.getItem('dateSet')) || []);
+const fetchReport = document.getElementById('fetchReportButton');
+const divDisplay = document.querySelector('Display');
+
 
 
 formDate.addEventListener('submit', dateForm);
+fetchReport.addEventListener('click', displayReport);
 
-var date ;
+
+var date;
+
+
 function dateForm(event) {
     event.preventDefault();
     const dateInput = event.target.date.value;
@@ -16,31 +23,32 @@ function dateForm(event) {
     if (!dateSet.has(unixDate)) {
         dateSet.add(unixDate);
         localStorage.setItem('dateSet', JSON.stringify(Array.from(dateSet)));
-        // saveAttendance(dateInput);
+
     } else {
         display(dateInput);
     }
 }
 
 const attendanceForm = document.getElementById('attendanceForm');
-attendanceForm.addEventListener('submit',saveAttendance);
+attendanceForm.addEventListener('submit', saveAttendance);
 
-function saveAttendance(event) {
-    if(date === undefined){
+function saveAttendance() {
+    if (date === undefined) {
         alert('Please select date Before Marking attendance');
-        return ;
+        return;
     }
     const attendanceData = new FormData(attendanceForm);
     const attendance = {};
     for (const [name, value] of attendanceData.entries()) {
         attendance[name] = value;
     }
+    
     localStorage.setItem(`attendance_${date}`, JSON.stringify(attendance));
     alert('Attendance saved!');
 }
 
-function display(date) {
-    if(date === undefined){
+function display() {
+    if (date === undefined) {
         alert('Please select date before marking attendance');
         return;
     }
@@ -57,4 +65,41 @@ function display(date) {
         }
         alert('Attendance data loaded!');
     }
+}
+
+function displayReport() {
+    if (date === undefined) {
+        alert('Please select date before marking attendance');
+        return;
+    }
+    divDefault.style.display = 'none';
+    const storedAttendance = JSON.parse(localStorage.getItem(`attendance_${date}`));
+    let countJson = {};
+    for (key in storedAttendance) {
+        let name = key.split('_')[1];
+        if (storedAttendance[key] === 'present') {
+
+            countJson[name] = (countJson[name] === undefined) ? 1 : countJson[name] + 1;
+        } else {
+            countJson[name] = 0;
+        }
+    }
+    renderJson(countJson);
+}
+
+function renderJson(countJson) {
+
+    const ulElem = document.getElementById('unordered');
+    const total = dateSet.size;
+
+    for (key in countJson) {
+
+        const listItem = document.createElement('li');
+        const itemText = document.createElement('p');
+        const percent = Math.floor(countJson[key] /total) * 100 ;
+        itemText.textContent = `${key}: ${percent} % `;
+        listItem.appendChild(itemText);
+        ulElem.appendChild(listItem);
+    }
+    console.log(countJson);
 }
