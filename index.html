@@ -7,27 +7,23 @@
     <title>Student Attendance</title>
     <script defer src="index.js"></script>
     <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
-
-
     <form id="dateForm">
         <label for="date">Select a Date:</label>
         <input type="date" id="date">
         <button type="submit">Search</button>
     </form>
 
-
-    <button type="button" class="right-group">Fetch Report</button>
+    <button type="button" id="fetchReportButton" class="right-group">Fetch Report</button>
 
     <br>
 
     <h1>Students List</h1>
 
     <div id="default">
-        <form>
+        <form id="attendanceForm">
             <div class="student-attendance">
                 Siva:
                 <label>
@@ -132,7 +128,6 @@
         </form>
     </div>
     <div id="Display"></div>
-
 </body>
 
 </html>
