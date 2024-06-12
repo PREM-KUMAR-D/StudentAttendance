@@ -2,7 +2,7 @@ const formDate = document.getElementById('dateForm');
 const divDefault = document.getElementById('default');
 const dateSet = new Set(JSON.parse(localStorage.getItem('dateSet')) || []);
 const fetchReport = document.getElementById('fetchReportButton');
-const divDisplay = document.querySelector('Display');
+const divDisplay = document.getElementById('display');
 
 
 
@@ -11,10 +11,14 @@ fetchReport.addEventListener('click', displayReport);
 
 
 var date;
+var countJson = {};
 
 
 function dateForm(event) {
     event.preventDefault();
+
+    divDisplay.style.display = 'none';
+    divDefault.style.display = 'block';
     const dateInput = event.target.date.value;
     date = dateInput;
     const d = new Date(dateInput);
@@ -42,16 +46,23 @@ function saveAttendance() {
     for (const [name, value] of attendanceData.entries()) {
         attendance[name] = value;
     }
+
+    for (key in attendance) {
+        let name = key.split('_')[1];
+        if (attendance[key] === 'present') {
+
+            countJson[name] = (countJson[name] === undefined) ? 1 : countJson[name] + 1;
+        } else {
+            countJson[name] = 0;
+        }
+    }
     
     localStorage.setItem(`attendance_${date}`, JSON.stringify(attendance));
     alert('Attendance saved!');
 }
 
 function display() {
-    if (date === undefined) {
-        alert('Please select date before marking attendance');
-        return;
-    }
+
 
     const storedAttendance = JSON.parse(localStorage.getItem(`attendance_${date}`));
     if (storedAttendance) {
@@ -68,22 +79,12 @@ function display() {
 }
 
 function displayReport() {
-    if (date === undefined) {
-        alert('Please select date before marking attendance');
-        return;
-    }
-    divDefault.style.display = 'none';
-    const storedAttendance = JSON.parse(localStorage.getItem(`attendance_${date}`));
-    let countJson = {};
-    for (key in storedAttendance) {
-        let name = key.split('_')[1];
-        if (storedAttendance[key] === 'present') {
 
-            countJson[name] = (countJson[name] === undefined) ? 1 : countJson[name] + 1;
-        } else {
-            countJson[name] = 0;
-        }
-    }
+    divDefault.style.display = 'none';
+    divDisplay.style.display = 'block';
+    
+    
+  
     renderJson(countJson);
 }
 
